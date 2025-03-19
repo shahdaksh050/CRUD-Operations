@@ -1,75 +1,30 @@
 <?php
-session_start();
+include('config.php');
 
-if (!isset($_SESSION['records'])) {
-    $_SESSION['records'] = [];
-}
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id = $_POST['id'] ?? uniqid();
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $phone = $_POST['phone'];
-
-    $_SESSION['records'][$id] = ['name' => $name, 'email' => $email, 'phone' => $phone];
-
-    header("Location: index.php");
-    exit();
-}
-
-if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    unset($_SESSION['records'][$id]);
-    header("Location: index.php");
-    exit();
-}
-
-$editRecord = null;
-if (isset($_GET['edit'])) {
-    $id = $_GET['edit'];
-    $editRecord = $_SESSION['records'][$id];
-}
+$sql = "SELECT * FROM records";
+$result = $conn->query($sql);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Record CRUD by Daksh</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>CRUD Operation - Contact List</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<h2>CRUD TABLE</h2>
-
-<form method="POST">
-    <input type="hidden" name="id" value="<?= $_GET['edit'] ?? '' ?>">
-    <input type="text" name="name" placeholder="Name" required value="<?= $editRecord['name'] ?? '' ?>">
-    <input type="email" name="email" placeholder="Email" required value="<?= $editRecord['email'] ?? '' ?>">
-    <input type="text" name="phone" placeholder="Phone" required value="<?= $editRecord['phone'] ?? '' ?>">
-    <button type="submit"><?= isset($editRecord) ? "Update" : "Add" ?> Record</button>
-</form>
-
-<table>
-    <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Actions</th>
-    </tr>
-    <?php foreach ($_SESSION['records'] as $id => $record): ?>
-        <tr>
-            <td><?= $record['name'] ?></td>
-            <td><?= $record['email'] ?></td>
-            <td><?= $record['phone'] ?></td>
-            <td>
-                <a href="?edit=<?= $id ?>">Edit</a>
-                <a href="?delete=<?= $id ?>" onclick="return confirm('Are you sure?')">Delete</a>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-</table>
-
+  <h1>Contact List</h1>
+  <p><a href="add.php">Add New Contact</a></p>
+  <ul>
+    <?php while ($row = $result->fetch_assoc()): ?>
+      <li>
+        <strong><?php echo htmlspecialchars($row['name']); ?></strong><br>
+        Email: <?php echo htmlspecialchars($row['email']); ?><br>
+        Phone: <?php echo htmlspecialchars($row['phone']); ?><br>
+        <a href="edit.php?id=<?php echo $row['id']; ?>">Edit</a> |
+        <a href="delete.php?id=<?php echo $row['id']; ?>" onclick="return confirm('Delete this contact?')">Delete</a>
+      </li>
+      <hr>
+    <?php endwhile; ?>
+  </ul>
 </body>
 </html>
